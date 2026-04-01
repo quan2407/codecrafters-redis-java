@@ -45,7 +45,34 @@ public class Main {
                     int bytesRead;
 
                     while ((bytesRead = input.read(buffer)) != -1){
-                        output.write("+PONG\r\n".getBytes());
+                        /*
+                        * Lệnh echo, dùng để kiểm tra đường truyền, check dữ liệu gửi
+                        * và trả về có chính xác không
+                        * cú pháp redis-cli ECHO (noidung)*/
+                        /*
+                        * Bulk String:(1 loại dữ liệu thuộc resp) loại container dùng cho chuỗi dữ liệu có độ dài
+                        * bất kỳ (chữ cái hoặc file ảnh gì đo)
+                        * Cấu trúc: $ + độ dài chuỗi + \r\n + nội dung chuỗi + \r\n
+                        * 1 vài ký tự khác: * + số nguyên: báo hiệu gửi 1 mảng gồm số nguyên phần tử*/
+
+                        /*
+                        * vậy khi chạy lệnh redis-cli ECHO + nội dung thì sẽ gửi vào file socket dạng như này
+                        * *2\r\n$4\r\nECHO\r\n$3\r\n(nội dung)\r\n
+                        * mục tiêu là mình sẽ phải trích xuất được nội dung trong đó rồi gói nó lại thành 1 bulk string để gửi lại*/
+                        String request = new String(buffer,0,bytesRead);
+
+                        String[] parts = request.split("\r\n");
+                        // Mảng sau khi cắt sẽ là: ["*2", "$4", "ECHO", "$3", "hey"].
+                        String command = parts[2];
+                        // parts[0] thường là *<số lượng phần tử>
+                        // parts[2] thường là lệnh (ví dụ: ECHO hoặc PING)
+                        // parts[4] thường là đối số đầu tiên (ví dụ: hey)
+                        if (command.equals("PING")){
+                            output.write("+PONG\r\n".getBytes());
+                        } else if (command.equals("ECHO")) {
+                            String argument = parts[4];
+                            String response = "$" + argument.length() + "\r\n" + argument + "\r\n";
+                        }
                         // yêu cầu gửi luôn dữ liệu không đợi đổ dữ liệu khác đầy rồi mới gửi
                         output.flush();
                     }
