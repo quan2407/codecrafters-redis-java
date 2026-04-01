@@ -3,8 +3,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
+    // storage dữ liệu chung cho tất cả cac luồng
+    private static final Map<String, String> storage = new ConcurrentHashMap<>();
   public static void main(String[] args){
     // You can use print statements as follows for debugging, they'll be visible when running tests.
 
@@ -74,6 +78,20 @@ public class Main {
                             String response = "$" + argument.length() + "\r\n" + argument + "\r\n";
                             output.write(response.getBytes());
 
+                        } else if (command.equals("SET")){
+                            String key = parts[4];
+                            String value = parts[6];
+                            storage.put(key,value);
+                            output.write("+OK\r\n".getBytes());
+                        } else if (command.equals("GET")){
+                            String key = parts[4];
+                            String value = storage.get(key);
+                            if (value == null){
+                                output.write("$-1\r\n".getBytes());
+                            } else {
+                                String response = "$" + value.length() + "\r\n" + value + "\r\n";
+                                output.write(response.getBytes());
+                            }
                         }
                         // yêu cầu gửi luôn dữ liệu không đợi đổ dữ liệu khác đầy rồi mới gửi
                         output.flush();
