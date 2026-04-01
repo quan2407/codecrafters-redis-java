@@ -72,6 +72,8 @@ public class Main {
                         } else if (command.equals("ECHO")) {
                             String argument = parts[4];
                             String response = "$" + argument.length() + "\r\n" + argument + "\r\n";
+                            output.write(response.getBytes());
+
                         }
                         // yêu cầu gửi luôn dữ liệu không đợi đổ dữ liệu khác đầy rồi mới gửi
                         output.flush();
