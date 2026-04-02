@@ -88,4 +88,12 @@ public class RedisDatabase {
         }
         return list.size();
     }
+
+    public String lpop(String key) {
+        List<String> list = listStorage.get(key);
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.remove(0);
+    }
 }

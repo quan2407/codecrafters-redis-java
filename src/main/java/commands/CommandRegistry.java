@@ -18,6 +18,7 @@ public class CommandRegistry {
         commands.put("ECHO", new EchoCommand());
         commands.put("LPUSH", new LPushCommand(db));
         commands.put("LLEN", new LLenCommand(db));
+        commands.put("LPOP", new LPopCommand(db));
     }
 
     public void handle(String[] parts, OutputStream out) throws IOException {
