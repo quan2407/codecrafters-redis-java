@@ -107,7 +107,6 @@ public class Main {
                             // Syntax:redis-cli RPUSH list element
 
                             String key = parts[4];
-                            String element = parts[6];
                             /*
                             * Trong môi trường đa luồng, nếu một ngươ đang đọc mà người khác đang
                             * thêm vào list thì java sẽ ném lỗi ConcurrentModificationException
@@ -116,7 +115,16 @@ public class Main {
                             * */
                             listStorage.putIfAbsent(key, new CopyOnWriteArrayList<>());
                             List<String> list = listStorage.get(key);
-                            list.add(element);
+                            /*
+                            * Phương pháp thêm nhiều phần tử:
+                            * nội dung file khi dùng lenh rpush
+                            * *5\r\n$5\r\nRPUSH\r\n$8\r\nlist_key\r\n$2\r\ne1\r\n$2\r\ne2\r\n$2\r\n
+                            * phân tích ta thấy từ part 4 trở đi, cứ mỗi +2 index sẽ la 1 phần tu(phan tu le la số lượng
+                            * phần tử) => dùng vòng lặp for*/
+                            for (int i = 6; i < parts.length; i+=2) {
+                                String element = parts[i];
+                                list.add(element);
+                            }
                             //RESP Integer: : + số + \r\n
                             String response = ":" + list.size() + "\r\n";
                             output.write(response.getBytes());
