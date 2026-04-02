@@ -3,12 +3,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Main {
     // storage dữ liệu chung cho tất cả cac luồng
     private static final Map<String, StorageValue> storage = new ConcurrentHashMap<>();
+    private static final Map<String, List<String>> listStorage = new ConcurrentHashMap<>();
   public static void main(String[] args){
     // You can use print statements as follows for debugging, they'll be visible when running tests.
 
@@ -99,6 +102,24 @@ public class Main {
                                 String response = "$" + val.length() + "\r\n" + val + "\r\n";
                                 output.write(response.getBytes());
                             }
+                        } else if (command.equals("RPUSH")) {
+                            // Lệnh RPUSH để thêm 1 phần tử vào 1 list
+                            // Syntax:redis-cli RPUSH list element
+
+                            String key = parts[4];
+                            String element = parts[6];
+                            /*
+                            * Trong môi trường đa luồng, nếu một ngươ đang đọc mà người khác đang
+                            * thêm vào list thì java sẽ ném lỗi ConcurrentModificationException
+                            * CopyOnWriteArrayList: khi gọi add thì nó sẽ copy tạo ra bản sao mới của list
+                            * hiện tại, thêm phần tử vào đó rồi sẽ copy mảng mới vào nội bộ mảng cũ
+                            * */
+                            listStorage.putIfAbsent(key, new CopyOnWriteArrayList<>());
+                            List<String> list = listStorage.get(key);
+                            list.add(element);
+                            //RESP Integer: : + số + \r\n
+                            String response = ":" + list.size() + "\r\n";
+                            output.write(response.getBytes());
                         }
                         // yêu cầu gửi luôn dữ liệu không đợi đổ dữ liệu khác đầy rồi mới gửi
                         output.flush();
