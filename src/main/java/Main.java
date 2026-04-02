@@ -128,6 +128,45 @@ public class Main {
                             //RESP Integer: : + số + \r\n
                             String response = ":" + list.size() + "\r\n";
                             output.write(response.getBytes());
+                        } else if (command.equalsIgnoreCase("LRANGE")) {
+                            // Lệnh LRANGE dùng để lấy phần tử từ start index đến stop index
+                            // Cấu trúc: LRANGE start_index stop_index
+                            String key = parts[4];
+                            int start = Integer.parseInt(parts[6]);
+                            int stop = Integer.parseInt(parts[8]);
+
+                            List<String> list = listStorage.get(key);
+
+                            if (list== null || start >= list.size() || start > stop){
+                                output.write("*0\r\n".getBytes());
+                            } else {
+                                // tránh việc client gửi yêu cầu phần cuối quá nhiều so với số
+                                // lượng list có
+                                if (stop >= list.size()){
+                                    stop = list.size() - 1;
+                                }
+
+                                // Lấy sublist
+                                /*
+                                * Tại sao lại là stop + 1?
+                                * do cơ chế lấy danh sách của redis và java khác nhau
+                                * Redis(LRANGE): Lấy cả đầu và cuối
+                                * VD: LRANGE 0 1: lấy cả index 0 và 1
+                                * Java(sublist(from,to) không lấy điểm cuối
+                                * sublist(0,1) -> lấy index 0
+                                * sublist(0,2) -> lấy 0 và 1
+                                * */
+                                List<String> subList = list.subList(start,stop+1);
+
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("*").append(subList.size()).append("\r\n");
+
+                                for (String item:subList){
+                                    sb.append("$").append(item.length()).append("\r\n")
+                                            .append(item).append("\r\n");
+                                }
+                                output.write(sb.toString().getBytes());
+                            }
                         }
                         // yêu cầu gửi luôn dữ liệu không đợi đổ dữ liệu khác đầy rồi mới gửi
                         output.flush();
