@@ -79,4 +79,13 @@ public class RedisDatabase {
         }
         return list.size();
     }
+
+    public int llen(String key) {
+        List<String> list = listStorage.get(key);
+        // Nếu list không tồn tại, Redis trả về 0
+        if (list == null) {
+            return 0;
+        }
+        return list.size();
+    }
 }
