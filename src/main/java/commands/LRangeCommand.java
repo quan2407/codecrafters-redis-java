@@ -22,7 +22,7 @@ public class LRangeCommand implements RedisCommand{
 
         List<String> subList = db.lrange(key, start, stop);
 
-        out.write(("* " + subList.size() + "\r\n").getBytes());
+        out.write(("*" + subList.size() + "\r\n").getBytes());
 
         for (String item : subList) {
             out.write(("$" + item.length() + "\r\n" + item + "\r\n").getBytes());
