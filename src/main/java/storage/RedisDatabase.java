@@ -96,4 +96,18 @@ public class RedisDatabase {
         }
         return list.remove(0);
     }
+
+
+    public List<String> lpop(String key, int count) {
+        List<String> list = listStorage.get(key);
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        List<String> poppedElements = new ArrayList<>();
+        int actualPopCount = Math.min(count, list.size());
+        for (int i = 0; i < actualPopCount; i++) {
+            poppedElements.add(list.remove(0));
+        }
+        return poppedElements;
+    }
 }
