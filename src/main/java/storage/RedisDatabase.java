@@ -70,4 +70,13 @@ public class RedisDatabase {
          * */
         return list.subList(start, stop + 1);
     }
+
+    public int lpush(String key, List<String> elements) {
+        listStorage.putIfAbsent(key, new java.util.concurrent.CopyOnWriteArrayList<>());
+        List<String> list = listStorage.get(key);
+        for (String element : elements){
+            list.add(0,element);
+        }
+        return list.size();
+    }
 }
