@@ -23,6 +23,7 @@ public class CommandRegistry {
         commands.put("LLEN", new LLenCommand(db));
         commands.put("LPOP", new LPopCommand(db));
         commands.put("BLPOP", new BLPopCommand(db));
+        commands.put("TYPE", new TypeCommand(db));
     }
 
     public void handle(String[] parts, OutputStream out) throws IOException {

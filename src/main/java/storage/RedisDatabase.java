@@ -117,4 +117,20 @@ public class RedisDatabase {
             return deque.pollFirst(timeoutInSeconds, TimeUnit.MILLISECONDS);
         }
     }
+
+    public String getType(String key) {
+        if (stringStorage.containsKey(key)){
+            StorageValue entry = stringStorage.get(key);
+            if (entry != null && entry.isExpired()){
+                stringStorage.remove(key);
+                return "none";
+            }
+            return "string";
+        }
+
+        if (listStorage.containsKey(key)){
+            return "list";
+        }
+        return "none";
+    }
 }
