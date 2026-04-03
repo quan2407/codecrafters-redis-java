@@ -1,11 +1,14 @@
 package storage;
 
 import java.util.*;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 public class RedisDatabase {
     private final Map<String, StorageValue> stringStorage = new ConcurrentHashMap<>();
-    private final Map<String, List<String>> listStorage = new ConcurrentHashMap<>();
+    private final Map<String, BlockingDeque<String>> listStorage = new ConcurrentHashMap<>();
 
     public void set(String key, String value, Long expiryTime){
         stringStorage.put(key, new StorageValue(value,expiryTime));
@@ -26,20 +29,22 @@ public class RedisDatabase {
      * CopyOnWriteArrayList: khi gọi add thì nó sẽ copy tạo ra bản sao mới của list
      * hiện tại, thêm phần tử vào đó rồi sẽ copy mảng mới vào nội bộ mảng cũ
      * */
+
+    private BlockingDeque<String> getOrInitList(String key){
+        return listStorage.computeIfAbsent(key, k -> new LinkedBlockingDeque<>());
+    }
     public int rpush(String key, List<String> elements) {
-        listStorage.putIfAbsent(key, new java.util.concurrent.CopyOnWriteArrayList<>());
-        List<String> list = listStorage.get(key);
-        list.addAll(elements);
-        return list.size();
+        BlockingDeque<String> deque = getOrInitList(key);
+        for (String e: elements){
+            deque.addLast(e);
+        }
+        return deque.size();
     }
 
     public List<String> lrange(String key, int start, int stop) {
-        List<String> list = listStorage.get(key);
-
-        if (list == null) {
-            return Collections.emptyList();
-        }
-
+        BlockingDeque<String> deque = listStorage.get(key);
+        if (deque == null) return Collections.emptyList();
+        List<String> list = new ArrayList<>(deque); // deque không hỗ trợ truy cập index trực tiếp
         int size = list.size();
 
         // --- LOGIC XỬ LÝ INDEX ÂM ---
@@ -72,42 +77,44 @@ public class RedisDatabase {
     }
 
     public int lpush(String key, List<String> elements) {
-        listStorage.putIfAbsent(key, new java.util.concurrent.CopyOnWriteArrayList<>());
-        List<String> list = listStorage.get(key);
-        for (String element : elements){
-            list.add(0,element);
+        BlockingDeque<String> deque = getOrInitList(key);
+        for (String e : elements) {
+            deque.addFirst(e);
         }
-        return list.size();
+        return deque.size();
     }
 
     public int llen(String key) {
-        List<String> list = listStorage.get(key);
-        // Nếu list không tồn tại, Redis trả về 0
-        if (list == null) {
-            return 0;
-        }
-        return list.size();
+        BlockingDeque<String> deque = listStorage.get(key);
+        return (deque == null) ? 0 : deque.size();
     }
 
     public String lpop(String key) {
-        List<String> list = listStorage.get(key);
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-        return list.remove(0);
+        BlockingDeque<String> deque = listStorage.get(key);
+        if (deque == null || deque.isEmpty()) return null;
+        return deque.pollFirst(); // remove first element
     }
 
 
     public List<String> lpop(String key, int count) {
-        List<String> list = listStorage.get(key);
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
+        BlockingDeque<String> deque = listStorage.get(key);
+        if (deque == null || deque.isEmpty()) return null;
         List<String> poppedElements = new ArrayList<>();
-        int actualPopCount = Math.min(count, list.size());
+        int actualPopCount = Math.min(count, deque.size());
         for (int i = 0; i < actualPopCount; i++) {
-            poppedElements.add(list.remove(0));
+            poppedElements.add(deque.pollFirst());
         }
         return poppedElements;
+    }
+
+    public String blpop(String key, long timeoutInSeconds) throws InterruptedException{
+        BlockingDeque<String> deque = getOrInitList(key);
+        if (timeoutInSeconds == 0) {
+            //BLPOP list_key 0 (dành cho đợi vô hạn)
+            return deque.takeFirst();
+        } else {
+            //BLPOP list_key 5 (dành cho đợi có thời hạn)
+            return deque.pollFirst(timeoutInSeconds, TimeUnit.SECONDS);
+        }
     }
 }
