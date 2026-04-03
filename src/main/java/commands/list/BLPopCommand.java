@@ -1,5 +1,6 @@
-package commands;
+package commands.list;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
 
 import java.io.IOException;
@@ -9,7 +10,7 @@ import java.io.OutputStream;
 * List có phần tử: lấy ra và trả về ngay
 * List empty: treo kết nối đợi khi có dữ liệu hoặc hết timeout
 * nếu lệnh ghi là timeout = 0: chờ cho đến khi có lệnh rpush/lpush từ client khác*/
-public class BLPopCommand implements RedisCommand{
+public class BLPopCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public BLPopCommand(RedisDatabase db) {

@@ -1,11 +1,12 @@
-package commands;
+package commands.list;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class LLenCommand implements RedisCommand{
+public class LLenCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public LLenCommand(RedisDatabase db) {

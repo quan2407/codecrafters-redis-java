@@ -1,5 +1,8 @@
 package commands;
 
+import commands.generic.*;
+import commands.list.*;
+import commands.string.*;
 import storage.RedisDatabase;
 
 import java.io.IOException;

@@ -1,5 +1,6 @@
-package commands;
+package commands.list;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
 
 import java.io.IOException;
@@ -7,7 +8,7 @@ import java.io.OutputStream;
 import java.util.List;
 // Lệnh LRANGE dùng để lấy phần tử từ start index đến stop index
 // Cấu trúc: LRANGE start_index stop_index
-public class LRangeCommand implements RedisCommand{
+public class LRangeCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public LRangeCommand(RedisDatabase db) {

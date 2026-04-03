@@ -1,4 +1,6 @@
-package commands;
+package commands.generic;
+
+import commands.RedisCommand;
 
 import java.io.IOException;
 import java.io.OutputStream;

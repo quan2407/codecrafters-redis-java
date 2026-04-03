@@ -1,13 +1,12 @@
-package commands;
+package commands.string;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
-import storage.StorageValue;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 
-public class GetCommand implements RedisCommand{
+public class GetCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public GetCommand(RedisDatabase db) {

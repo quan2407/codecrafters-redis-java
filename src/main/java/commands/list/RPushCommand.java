@@ -1,5 +1,6 @@
-package commands;
+package commands.list;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
 
 import java.io.IOException;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 // Lệnh RPUSH để thêm 1 phần tử vào 1 list
 // Syntax:redis-cli RPUSH list element
-public class RPushCommand implements RedisCommand{
+public class RPushCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public RPushCommand(RedisDatabase db) {

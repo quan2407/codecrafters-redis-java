@@ -1,5 +1,6 @@
-package commands;
+package commands.list;
 
+import commands.RedisCommand;
 import storage.RedisDatabase;
 
 import java.io.IOException;
@@ -7,7 +8,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LPushCommand implements RedisCommand{
+public class LPushCommand implements RedisCommand {
     private final RedisDatabase db;
 
     public LPushCommand(RedisDatabase db) {
