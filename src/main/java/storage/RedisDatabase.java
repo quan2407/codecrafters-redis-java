@@ -140,11 +140,34 @@ public class RedisDatabase {
         return "none";
     }
 
-    public String xadd(String key, String id, Map<String, String> fields) {
+    public String xadd(String key, String id, Map<String, String> fields) throws IllegalArgumentException {
+        if ("0-0".equals(id)){
+            throw new IllegalArgumentException("ERR The ID specified in XADD must be greater than 0-0");
+        }
+
         List<StreamEntry> entries = streamStorage.computeIfAbsent(key, k -> new ArrayList<>());
         synchronized (entries) {
+            if (!entries.isEmpty()){
+                StreamEntry lastEntry = entries.get(entries.size()-1);
+                if (!isValidNewId(id, lastEntry.getId())) {
+                    throw new IllegalArgumentException("ERR The ID specified in XADD is equal or smaller than the target stream top item");                }
+            }
             entries.add(new StreamEntry(id, fields));
         }
         return id;
+    }
+
+    private boolean isValidNewId(String newId, String lastId) {
+        String[] newParts = newId.split("-");
+        String[] lastParts = lastId.split("-");
+
+        long newMs = Long.parseLong(newParts[0]);
+        long newSeq = Long.parseLong(newParts[1]);
+        long lastMs = Long.parseLong(lastParts[0]);
+        long lastSeq = Long.parseLong(lastParts[1]);
+        // ms: compare by milisecond
+        if (newMs > lastMs) return true;
+        if (newMs == lastMs) return newSeq > lastSeq;
+        return false;
     }
 }
