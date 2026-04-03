@@ -141,20 +141,47 @@ public class RedisDatabase {
     }
 
     public String xadd(String key, String id, Map<String, String> fields) throws IllegalArgumentException {
-        if ("0-0".equals(id)){
-            throw new IllegalArgumentException("ERR The ID specified in XADD must be greater than 0-0");
-        }
-
         List<StreamEntry> entries = streamStorage.computeIfAbsent(key, k -> new ArrayList<>());
+
         synchronized (entries) {
+            String finalId = generateIdIfNeeded(id,entries);
+            if ("0-0".equals(finalId)){
+                throw new IllegalArgumentException("ERR The ID specified in XADD must be greater than 0-0");
+            }
+
             if (!entries.isEmpty()){
                 StreamEntry lastEntry = entries.get(entries.size()-1);
-                if (!isValidNewId(id, lastEntry.getId())) {
+                if (!isValidNewId(finalId, lastEntry.getId())) {
                     throw new IllegalArgumentException("ERR The ID specified in XADD is equal or smaller than the target stream top item");                }
             }
-            entries.add(new StreamEntry(id, fields));
+            entries.add(new StreamEntry(finalId, fields));
+            return finalId;
         }
-        return id;
+    }
+
+    private String generateIdIfNeeded(String id, List<StreamEntry> entries) {
+        if (!id.endsWith("-*")){
+            return id;
+        }
+        // ex: 100-* (create when reach 100 ms)
+        // ms is 100, after - is seq
+        long ms = Long.parseLong(id.split("-")[0]);
+        long seq;
+        if (entries.isEmpty()){
+            seq = (ms == 0) ? 1 : 0;
+        } else {
+            // find the last entry
+            StreamEntry lastEntry = entries.get(entries.size()-1);
+            String[] lastParts = lastEntry.getId().split("-");
+            long lastMs = Long.parseLong(lastParts[0]);
+            long lastSeq = Long.parseLong(lastParts[1]);
+            if (ms == lastMs) {
+                seq = lastSeq + 1;
+            } else {
+                seq = 0;
+            }
+        }
+        return ms + "-" + seq;
     }
 
     private boolean isValidNewId(String newId, String lastId) {
