@@ -27,5 +27,8 @@ public class XAddCommand implements RedisCommand {
             fields.put(fieldKey,fieldValue);
         }
         String resultId = db.xadd(key,id,fields);
+        String response = "$" + resultId.length() + "\r\n" + resultId + "\r\n";
+        out.write(response.getBytes());
+        out.flush();
     }
 }
