@@ -1,5 +1,7 @@
 package storage;
 
+import models.StreamEntry;
+
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,12 +11,14 @@ import java.util.concurrent.TimeUnit;
 public class RedisDatabase {
     private final Map<String, StorageValue> stringStorage = new ConcurrentHashMap<>();
     private final Map<String, BlockingDeque<String>> listStorage = new ConcurrentHashMap<>();
+    //key ở đây là định danh cho ấu trúc d liệu
+    private final Map<String, List<StreamEntry>> streamStorage = new ConcurrentHashMap<>();
 
-    public void set(String key, String value, Long expiryTime){
-        stringStorage.put(key, new StorageValue(value,expiryTime));
+    public void set(String key, String value, Long expiryTime) {
+        stringStorage.put(key, new StorageValue(value, expiryTime));
     }
 
-    public String get(String key){
+    public String get(String key) {
         StorageValue entry = stringStorage.get(key);
         if (entry == null || entry.isExpired()) {
             if (entry != null) stringStorage.remove(key);
@@ -30,12 +34,13 @@ public class RedisDatabase {
      * hiện tại, thêm phần tử vào đó rồi sẽ copy mảng mới vào nội bộ mảng cũ
      * */
 
-    private BlockingDeque<String> getOrInitList(String key){
+    private BlockingDeque<String> getOrInitList(String key) {
         return listStorage.computeIfAbsent(key, k -> new LinkedBlockingDeque<>());
     }
+
     public int rpush(String key, List<String> elements) {
         BlockingDeque<String> deque = getOrInitList(key);
-        for (String e: elements){
+        for (String e : elements) {
             deque.addLast(e);
         }
         return deque.size();
@@ -107,7 +112,7 @@ public class RedisDatabase {
         return poppedElements;
     }
 
-    public String blpop(String key, long timeoutInSeconds) throws InterruptedException{
+    public String blpop(String key, long timeoutInSeconds) throws InterruptedException {
         BlockingDeque<String> deque = getOrInitList(key);
         if (timeoutInSeconds == 0) {
             //BLPOP list_key 0 (dành cho đợi vô hạn)
@@ -119,18 +124,27 @@ public class RedisDatabase {
     }
 
     public String getType(String key) {
-        if (stringStorage.containsKey(key)){
+        if (stringStorage.containsKey(key)) {
             StorageValue entry = stringStorage.get(key);
-            if (entry != null && entry.isExpired()){
+            if (entry != null && entry.isExpired()) {
                 stringStorage.remove(key);
                 return "none";
             }
             return "string";
         }
 
-        if (listStorage.containsKey(key)){
+        if (listStorage.containsKey(key)) {
             return "list";
         }
+        if (streamStorage.containsKey(key)) return "stream";
         return "none";
+    }
+
+    public String xadd(String key, String id, Map<String, String> fields) {
+        List<StreamEntry> entries = streamStorage.computeIfAbsent(key, k -> new ArrayList<>());
+        synchronized (entries) {
+            entries.add(new StreamEntry(id, fields));
+        }
+        return id;
     }
 }

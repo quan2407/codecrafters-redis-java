@@ -2,6 +2,7 @@ package commands;
 
 import commands.generic.*;
 import commands.list.*;
+import commands.stream.XAddCommand;
 import commands.string.*;
 import storage.RedisDatabase;
 
@@ -24,6 +25,7 @@ public class CommandRegistry {
         commands.put("LPOP", new LPopCommand(db));
         commands.put("BLPOP", new BLPopCommand(db));
         commands.put("TYPE", new TypeCommand(db));
+        commands.put("XADD", new XAddCommand(db));
     }
 
     public void handle(String[] parts, OutputStream out) throws IOException {
