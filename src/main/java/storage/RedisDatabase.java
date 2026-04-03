@@ -114,7 +114,7 @@ public class RedisDatabase {
             return deque.takeFirst();
         } else {
             //BLPOP list_key 5 (dành cho đợi có thời hạn)
-            return deque.pollFirst(timeoutInSeconds, TimeUnit.SECONDS);
+            return deque.pollFirst(timeoutInSeconds, TimeUnit.MILLISECONDS);
         }
     }
 }

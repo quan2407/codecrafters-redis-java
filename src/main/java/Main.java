@@ -70,8 +70,12 @@ public class Main {
 
                 // 2. Kiểm tra xem có đủ dữ liệu để đọc Command name không
                 if (parts.length > 2) {
-                    // 3. Ủy quyền xử lý cho Registry
-                    registry.handle(parts, output);
+                    try {
+                        registry.handle(parts, output);
+                    } catch (Exception e) {
+                        // Nếu lệnh bị lỗi (như lỗi parse số), gửi thông báo lỗi về client
+                        output.write(("-ERR " + e.getMessage() + "\r\n").getBytes());
+                    }
                 }
 
                 // Đẩy dữ liệu đi ngay lập tức

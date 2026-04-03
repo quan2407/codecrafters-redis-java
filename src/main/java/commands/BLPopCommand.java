@@ -19,9 +19,14 @@ public class BLPopCommand implements RedisCommand{
     public void execute(String[] parts, OutputStream out) throws IOException {
         // Cấu trúc request RESP: *4\r\n$5\r\nBLPOP\r\n$8\r\nlist_key\r\n$1\r\n0\r\n
         String key = parts[4];
-        long timeout = Long.parseLong(parts[6]);
         try {
-            String result = db.blpop(key,timeout);
+            double timeoutDouble = Double.parseDouble(parts[6]);
+            double timeoutMillis = timeoutDouble * 1000;
+            if (timeoutMillis > Long.MAX_VALUE) {
+                timeoutMillis = Long.MAX_VALUE; // Chặn lại ở mức tối đa
+            }
+            long finalTimeout = (long) timeoutMillis;
+            String result = db.blpop(key,finalTimeout);
             if (result == null){
                 out.write("*-1\r\n".getBytes());
             } else {
