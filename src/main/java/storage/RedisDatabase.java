@@ -165,7 +165,7 @@ public class RedisDatabase {
             long currentMs = System.currentTimeMillis();
             idToProcess = currentMs + "-*";
         }
-        if (!id.endsWith("-*")){
+        if (!idToProcess.endsWith("-*")){
             return id;
         }
         // ex: 100-* (create when reach 100 ms)
