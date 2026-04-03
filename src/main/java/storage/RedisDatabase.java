@@ -160,12 +160,17 @@ public class RedisDatabase {
     }
 
     private String generateIdIfNeeded(String id, List<StreamEntry> entries) {
+        String idToProcess = id;
+        if ("*".equals(id)){
+            long currentMs = System.currentTimeMillis();
+            idToProcess = currentMs + "-*";
+        }
         if (!id.endsWith("-*")){
             return id;
         }
         // ex: 100-* (create when reach 100 ms)
         // ms is 100, after - is seq
-        long ms = Long.parseLong(id.split("-")[0]);
+        long ms = Long.parseLong(idToProcess.split("-")[0]);
         long seq;
         if (entries.isEmpty()){
             seq = (ms == 0) ? 1 : 0;
