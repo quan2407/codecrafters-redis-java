@@ -18,8 +18,8 @@ public class XReadCommand implements RedisCommand {
 
     @Override
     public void execute(String[] parts, OutputStream out) throws IOException {
-        String key = parts[4];
-        String lastId = parts[6];
+        String key = parts[2];
+        String lastId = parts[3];
 
         List<StreamEntry> entries = db.xread(key,lastId);
 
