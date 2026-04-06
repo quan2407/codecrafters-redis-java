@@ -208,7 +208,12 @@ public class RedisDatabase {
         if (entries == null) return new ArrayList<>();
 
         // Chuẩn hóa ID (tự động thêm -0 hoặc -MAX)
-        String finalStart = start.contains("-") ? start : start + "-0";
+        String finalStart;
+        if ("-".equals(start)){
+            finalStart = "0-0";
+        } else {
+            finalStart = start.contains("-") ? start : start + "-0";
+        }
         String finalEnd = end.contains("-") ? end : end + "-" + Long.MAX_VALUE;
 
         List<StreamEntry> result = new ArrayList<>();
