@@ -3,6 +3,7 @@ package commands;
 import commands.generic.*;
 import commands.list.*;
 import commands.stream.XAddCommand;
+import commands.stream.XRangeCommand;
 import commands.string.*;
 import storage.RedisDatabase;
 
@@ -26,6 +27,8 @@ public class CommandRegistry {
         commands.put("BLPOP", new BLPopCommand(db));
         commands.put("TYPE", new TypeCommand(db));
         commands.put("XADD", new XAddCommand(db));
+        commands.put("XRANGE", new XRangeCommand(db));
+
     }
 
     public void handle(String[] parts, OutputStream out) throws IOException {

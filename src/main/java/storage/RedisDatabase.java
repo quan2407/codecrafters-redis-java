@@ -202,4 +202,30 @@ public class RedisDatabase {
         if (newMs == lastMs) return newSeq > lastSeq;
         return false;
     }
+
+    public List<StreamEntry> xrange(String key, String start, String end) {
+        List<StreamEntry> entries = streamStorage.get(key);
+        if (entries == null) return new ArrayList<>();
+
+        // Chuẩn hóa ID (tự động thêm -0 hoặc -MAX)
+        String finalStart = start.contains("-") ? start : start + "-0";
+        String finalEnd = end.contains("-") ? end : end + "-" + Long.MAX_VALUE;
+
+        List<StreamEntry> result = new ArrayList<>();
+        for (StreamEntry entry : entries){
+            String currentId = entry.getId();
+            if ((isGreaterOrEqual(currentId,finalStart)) && isGreaterOrEqual(finalEnd,currentId)){
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    private boolean isGreaterOrEqual(String id1, String id2) {
+        if (id1.equals(id2)) return true;
+        String[] p1 = id1.split("-"), p2 = id2.split("-");
+        long ms1 = Long.parseLong(p1[0]), s1 = Long.parseLong(p1[1]);
+        long ms2 = Long.parseLong(p2[0]), s2 = Long.parseLong(p2[1]);
+        return ms1 > ms2 || (ms1 == ms2 && s1 >= s2);
+    }
 }
