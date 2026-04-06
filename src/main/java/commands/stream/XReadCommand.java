@@ -36,6 +36,22 @@ public class XReadCommand implements RedisCommand {
         int totalArgsAfterStreams = (parts.length - (streamsIndex+1))/2;
         int numStreams = totalArgsAfterStreams / 2;
 
+        for (int i = 0; i < numStreams; i++) {
+            String key = parts[streamsIndex + 2 + (i * 2)];
+            int idIndex = streamsIndex + 2 + (numStreams * 2) + (i * 2);
+            String lastId = parts[idIndex];
+            if ("$".equals(lastId)) {
+                // Vào DB lấy cái ID to nhất hiện tại của Key này
+                String currentMaxId = db.getStreamMaxId(key);
+
+                // Thay thế dấu $ bằng ID thật để dùng cho các vòng lặp while sau này
+                if (currentMaxId != null) {
+                    parts[idIndex] = currentMaxId;
+                } else {
+                    parts[idIndex] = "0-0"; // Nếu stream trống thì coi như bắt đầu từ 0
+                }
+            }
+        }
         long startTime = System.currentTimeMillis();
         boolean foundData = false;
         while (true){
@@ -52,13 +68,14 @@ public class XReadCommand implements RedisCommand {
 
             // Kiểm tra Time out
             if (blockMs > 0 && (System.currentTimeMillis()-startTime) >= blockMs) break;
-
+            // cho luồng ngủ 50 mili giây rồi chạy lại vòng lặp
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
                 break;
             }
         }
+
         if (!foundData && blockMs != -1){
             out.write("*-1\r\n".getBytes());
             return;

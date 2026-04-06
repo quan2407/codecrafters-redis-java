@@ -258,4 +258,10 @@ public class RedisDatabase {
         long ms2 = Long.parseLong(p2[0]), s2 = Long.parseLong(p2[1]);
         return ms1 > ms2 || (ms1 == ms2 && s1 > s2);
     }
+    public String getStreamMaxId(String key) {
+        List<StreamEntry> entries = streamStorage.get(key);
+        if (entries == null || entries.isEmpty()) return "0-0";
+        // Lấy ID của thằng cuối cùng trong danh sách
+        return entries.get(entries.size() - 1).getId();
+    }
 }
