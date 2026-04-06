@@ -214,8 +214,12 @@ public class RedisDatabase {
         } else {
             finalStart = start.contains("-") ? start : start + "-0";
         }
-        String finalEnd = end.contains("-") ? end : end + "-" + Long.MAX_VALUE;
-
+        String finalEnd;
+        if ("+".equals(end)) {
+            finalEnd = Long.MAX_VALUE + "-" + Long.MAX_VALUE;
+        } else {
+            finalEnd = end.contains("-") ? end : end + "-" + Long.MAX_VALUE;
+        }
         List<StreamEntry> result = new ArrayList<>();
         for (StreamEntry entry : entries){
             String currentId = entry.getId();
