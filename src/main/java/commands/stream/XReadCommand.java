@@ -19,7 +19,11 @@ public class XReadCommand implements RedisCommand {
     @Override
     public void execute(String[] parts, OutputStream out) throws IOException {
         int streamsIndex = -1;
+        long blockMs = -1; // mặc định là không block
         for (int i = 0; i < parts.length; i++){
+            if ("BLOCK".equalsIgnoreCase(parts[i])){
+                blockMs = Long.parseLong(parts[i+2]); // tính số mili giây block
+            }
             if ("STREAMS".equalsIgnoreCase(parts[i])){
                 streamsIndex = i;
                 break;
@@ -32,6 +36,33 @@ public class XReadCommand implements RedisCommand {
         int totalArgsAfterStreams = (parts.length - (streamsIndex+1))/2;
         int numStreams = totalArgsAfterStreams / 2;
 
+        long startTime = System.currentTimeMillis();
+        boolean foundData = false;
+        while (true){
+            for (int i = 0; i < numStreams; i++) {
+                String key = parts[streamsIndex + 2 + (i*2)];
+                String lastId = parts[streamsIndex + 2 + (numStreams * 2) + (i*2)];
+                if (!db.xread(key, lastId).isEmpty()) {
+                    foundData = true;
+                    break;
+                }
+            }
+            // Nếu thấy có dữ liệu hoặc không yêu cầu BLOCK thì thoát vòng lặp để xử lý trả về
+            if (foundData || blockMs == -1) break;
+
+            // Kiểm tra Time out
+            if (blockMs > 0 && (System.currentTimeMillis()-startTime) >= blockMs) break;
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        if (!foundData && blockMs != -1){
+            out.write("*-1\r\n".getBytes());
+            return;
+        }
         StringBuilder resp = new StringBuilder();
         resp.append("*").append(numStreams).append("\r\n");
         // tìm key dựa từ stream index, + thêm bước nhảy i lên 2 ô tiếp để né cái length
