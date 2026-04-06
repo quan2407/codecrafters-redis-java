@@ -29,7 +29,7 @@ public class XReadCommand implements RedisCommand {
         // *2 -> [key, mảng entry]
         resp.append("*2\r\n");
         // Tên key
-        resp.append("*").append(key.length()).append("\r\n").append(key).append("\r\n");
+        resp.append("$").append(key.length()).append("\r\n").append(key).append("\r\n");
 
         // Mảng entry
         resp.append("*").append(entries.size()).append("\r\n");
