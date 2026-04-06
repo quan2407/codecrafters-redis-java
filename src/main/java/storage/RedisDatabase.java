@@ -112,14 +112,14 @@ public class RedisDatabase {
         return poppedElements;
     }
 
-    public String blpop(String key, long timeoutInSeconds) throws InterruptedException {
+    public String blpop(String key, long timeoutMs) throws InterruptedException {
         BlockingDeque<String> deque = getOrInitList(key);
-        if (timeoutInSeconds == 0) {
+        if (timeoutMs <= 0) {
             //BLPOP list_key 0 (dành cho đợi vô hạn)
             return deque.takeFirst();
         } else {
             //BLPOP list_key 5 (dành cho đợi có thời hạn)
-            return deque.pollFirst(timeoutInSeconds, TimeUnit.MILLISECONDS);
+            return deque.pollFirst(timeoutMs, TimeUnit.MILLISECONDS);
         }
     }
 
