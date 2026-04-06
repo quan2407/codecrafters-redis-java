@@ -237,4 +237,25 @@ public class RedisDatabase {
         long ms2 = Long.parseLong(p2[0]), s2 = Long.parseLong(p2[1]);
         return ms1 > ms2 || (ms1 == ms2 && s1 >= s2);
     }
+
+    public List<StreamEntry> xread(String key, String lastId) {
+        List<StreamEntry> entries = streamStorage.get(key);
+        if (entries==null) return new ArrayList<>();
+
+        List<StreamEntry> result = new ArrayList<>();
+        for (StreamEntry entry : entries) {
+            // Chỉ lấy nếu entry.getId() > lastId
+            if (isStrictlyGreater(entry.getId(), lastId)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    private boolean isStrictlyGreater(String id1, String id2) {
+        String[] p1 = id1.split("-"), p2 = id2.split("-");
+        long ms1 = Long.parseLong(p1[0]), s1 = Long.parseLong(p1[1]);
+        long ms2 = Long.parseLong(p2[0]), s2 = Long.parseLong(p2[1]);
+        return ms1 > ms2 || (ms1 == ms2 && s1 > s2);
+    }
 }

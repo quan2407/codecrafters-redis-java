@@ -48,6 +48,22 @@ public class Main {
         }
     }
 
+    /*
+    * 1. Ký hiệu $ (Bulk String - Chuỗi dữ liệu)
+Dùng cho mọi nội dung văn bản (Tên lệnh, Tên Key, ID, Value).
+
+Cấu trúc: $<độ dài>\r\n<nội dung>\r\n
+
+Ví dụ: Chữ Quân có 4 ký tự (nếu tính không dấu) -> $4\r\nQuân\r\n.
+
+2. Ký hiệu * (Array - Mảng)
+Dùng để nhóm các phần tử lại với nhau.
+
+Cấu trúc: *<số lượng phần tử>\r\n
+
+Ví dụ: Một mảng có 2 chữ [ "XADD", "mystream" ] sẽ là:
+*2\r\n$4\r\nXADD\r\n$8\r\nmystream\r\n
+* */
     private static void handleClient(Socket clientSocket) {
         /*
          * Socket khi khởi tại sẽ đi kèm 2 vùng nhớ như ở dưới
